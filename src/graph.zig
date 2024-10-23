@@ -2,20 +2,34 @@
 
 const std = @import("std");
 
-/// A graph can be of type directed or undirected
+/// A graph can be directed
+/// or undirected. When you create a new
+/// graph, it is required to specify its
+/// type.
 pub const GraphType = enum {
+    /// Edges have direction. Every edge goes from one
+    /// note to another, but not backwards.
     Directed,
+    /// Edges have not direction.
     Undirected,
 };
 
 pub const GraphError = error{
+    /// Returned when a duplicated node is tried to be added.
     NodeAlreadyExists,
+    /// Returned when querying properties of a not existing node.
     NodeNotExists,
+    /// Returned when a duplicated edge is tried to be added.
     EdgeAlreadyExists,
+    /// Returned when querying properties of a not existing edge.
     EdgeNotExists,
+    /// Returned when there is not connection between two nodes.
     PathNotExists,
 };
 
+/// Represents a set of node and a set of edges connecting nodes. Data type to
+/// be used to represent nodes shoudl be specified when the graph is
+/// initialized. You can use any scalar type working with logical opertors.
 pub fn Graph(comptime T: type) type {
     return struct {
         const Node = struct {
@@ -24,8 +38,8 @@ pub fn Graph(comptime T: type) type {
         };
 
         pub const Edge = struct {
-            a: T,
-            b: T,
+            node_a: T,
+            node_b: T,
         };
 
         const Self = @This();
@@ -61,11 +75,11 @@ pub fn Graph(comptime T: type) type {
             return if (value) |_| true else false;
         }
 
-        pub fn hasEdge(self: *Self, vertex_a: T, vertex_b: T) bool {
-            const node = self.getNode(vertex_a);
+        pub fn hasEdge(self: *Self, node_a: T, node_b: T) bool {
+            const node = self.getNode(node_a);
             if (node) |n| {
                 for (n.adjs.items) |vertex| {
-                    if (vertex == vertex_b) {
+                    if (vertex == node_b) {
                         return true;
                     }
                 }
@@ -99,34 +113,34 @@ pub fn Graph(comptime T: type) type {
             return null;
         }
 
-        fn _addEdge(self: *Self, vertex_a: T, vertex_b: T, weight: ?f64) !void {
-            if (!self.hasNode(vertex_b)) {
-                try self.addNode(vertex_b);
+        fn _addEdge(self: *Self, node_a: T, node_b: T, weight: ?f64) !void {
+            if (!self.hasNode(node_b)) {
+                try self.addNode(node_b);
             }
-            if (!self.hasNode(vertex_a)) {
-                try self.addNode(vertex_a);
+            if (!self.hasNode(node_a)) {
+                try self.addNode(node_a);
             }
-            const node = self.getNode(vertex_a);
+            const node = self.getNode(node_a);
             if (node) |n| {
                 for (n.adjs.items) |vertex| {
-                    if (vertex == vertex_b) {
+                    if (vertex == node_b) {
                         return GraphError.EdgeAlreadyExists;
                     }
                 }
-                try n.adjs.append(vertex_b);
+                try n.adjs.append(node_b);
                 try n.weights.append(weight);
             }
         }
 
-        pub fn addWeightedEdge(self: *Self, vertex_a: T, vertex_b: T, weight: ?f64) !void {
-            try self._addEdge(vertex_a, vertex_b, weight);
+        pub fn addWeightedEdge(self: *Self, node_a: T, node_b: T, weight: ?f64) !void {
+            try self._addEdge(node_a, node_b, weight);
             if (self.gType == GraphType.Undirected) {
-                try self._addEdge(vertex_b, vertex_a, weight);
+                try self._addEdge(node_b, node_a, weight);
             }
         }
 
-        pub fn addEdge(self: *Self, vertex_a: T, vertex_b: T) !void {
-            try self.addWeightedEdge(vertex_a, vertex_b, undefined);
+        pub fn addEdge(self: *Self, node_a: T, node_b: T) !void {
+            try self.addWeightedEdge(node_a, node_b, undefined);
         }
 
         pub fn numberOfNodes(self: *const Self) u64 {
@@ -141,11 +155,11 @@ pub fn Graph(comptime T: type) type {
             return if (self.gType == GraphType.Directed) count else count / 2;
         }
 
-        pub fn getWeight(self: *Self, vertex_a: T, vertex_b: T) !?f64 {
-            const node = self.getNode(vertex_a);
+        pub fn getWeight(self: *Self, node_a: T, node_b: T) !?f64 {
+            const node = self.getNode(node_a);
             if (node) |n| {
                 for (0..n.adjs.items.len) |i| {
-                    if (n.adjs.items[i] == vertex_b) {
+                    if (n.adjs.items[i] == node_b) {
                         return n.weights.items[i];
                     }
                 }
@@ -189,8 +203,8 @@ pub fn Graph(comptime T: type) type {
             for (0..self.root.items.len) |i| {
                 for (self.root.items[i].adjs.items) |vertex| {
                     try edges.append(Self.Edge{
-                        .a = self.nodes.items[i],
-                        .b = vertex,
+                        .node_a = self.nodes.items[i],
+                        .node_b = vertex,
                     });
                 }
             }
@@ -256,5 +270,5 @@ test "GraphPredSuc" {
     try std.testing.expect(std.mem.eql(u8, &[_]u8{2, 3}, succ));
     const edges = try g.getEdges(std.testing.allocator);
     defer std.testing.allocator.free(edges);
-    try std.testing.expect(g.hasEdge(edges[0].a, edges[0].b));
+    try std.testing.expect(g.hasEdge(edges[0].node_a, edges[0].node_b));
 }
