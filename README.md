@@ -1,5 +1,7 @@
 # ziggraph - A graph library written in Zig
 
+Documentation: <https://jailop.github.io/ziggraph/>
+
 Here is an example:
 
 ```zig
