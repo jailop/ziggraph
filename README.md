@@ -1,11 +1,11 @@
 # ziggraph - A graph representation module written in Zig
 
-This module is intended to provide a representation for graphs, providing basic
-operations to define a graph and perform basic operations on it. 
+This module is intended to provide a representation for graphs with basic
+operations.
 
 Documentation: <https://jailop.github.io/ziggraph/>
 
-Here is an example:
+Example:
 
 ```zig
 const std = @import("std");
