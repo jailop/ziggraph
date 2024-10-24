@@ -4,7 +4,7 @@ Here is an example:
 
 ```zig
 const std = @import("std");
-const graph = @import("src/graph.zig");
+const graph = @import("ziggraph.zig");
 const Graph = graph.Graph;
 const GraphType = graph.GraphType;
 
