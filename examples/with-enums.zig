@@ -1,15 +1,5 @@
-# ziggraph - A graph representation module written in Zig
-
-This module is intended to provide a representation for graphs, providing basic
-operations to define a graph and perform basic operations on it. 
-
-Documentation: <https://jailop.github.io/ziggraph/>
-
-Here is an example:
-
-```zig
 const std = @import("std");
-const graph = @import("ziggraph.zig");
+const graph = @import("src/graph.zig");
 const Graph = graph.Graph;
 const GraphType = graph.GraphType;
 
@@ -44,15 +34,3 @@ pub fn main() !void {
         });
     }
 }
-```
-
-The output is:
-
-```
-LOS_ANGELES - NEW_YORK: 2.44815e3 miles
-LOS_ANGELES - HOUSTON: 1.37093e3 miles
-NEW_YORK - LOS_ANGELES: 2.44815e3 miles
-NEW_YORK - CHICAGO: 7.1482e2 miles
-CHICAGO - NEW_YORK: 7.1482e2 miles
-HOUSTON - LOS_ANGELES: 1.37093e3 miles
-```
