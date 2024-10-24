@@ -25,6 +25,10 @@ pub const GraphError = error{
     EdgeNotExists,
     /// Returned when there is not connection between two nodes.
     PathNotExists,
+    /// Returned when functions speficif for a type of graph are called.
+    /// For example, inDegree and outDegree only work with directed
+    /// graphs.
+    IncorrectGraphType,
 };
 
 /// Represents a set of node and a set of edges connecting nodes. Data type to
@@ -48,7 +52,7 @@ pub fn Graph(comptime T: type) type {
         allocator: std.mem.Allocator,
         gType: GraphType,
 
-        pub fn init(comptime allocator: std.mem.Allocator, comptime gType: GraphType) !Self {
+        pub fn init(allocator: std.mem.Allocator, comptime gType: GraphType) !Self {
             return Self{
                 .nodes = std.ArrayList(T).init(allocator),
                 .root = std.ArrayList(Node).init(allocator),
@@ -177,11 +181,26 @@ pub fn Graph(comptime T: type) type {
             return GraphError.NodeNotExists;
         }
 
+        /// Returns the number of edges out of a node
+        pub fn outDegree(self: *Self, node: T) !usize {
+            if (self.gType != GraphType.Directed) {
+                return GraphError.IncorrectGraphType;
+            }
+            const node_ = self.getNode(node);
+            if (node_) |n| {
+                return n.adjs.items.len;
+            }
+            return GraphError.NodeNotExists;
+        }
+
         /// Returns a list of vertex that are predecessor of the required one.
         /// If the required vertex doesn't exist, an error is returned.
         /// If the required vertex doesn't have any predecessor, a empty list
         /// is returned.
         pub fn getPredecessors(self: *Self, allocator: std.mem.Allocator, vertex: T) ![]T {
+            if (!self.hasNode(vertex)) {
+                return GraphError.NodeNotExists;
+            }
             var pred = std.ArrayList(T).init(self.allocator);
             defer pred.deinit();
             for (0..self.root.items.len) |i| {
@@ -195,7 +214,26 @@ pub fn Graph(comptime T: type) type {
             std.mem.copyForwards(T, res, pred.items);
             return res;
         }
-        
+       
+        // Returns the number of edges in of a node
+        pub fn inDegree(self: *Self, node: T) !usize {
+            if (self.gType != GraphType.Directed) {
+                return GraphError.IncorrectGraphType;
+            }
+            if (!self.hasNode(node)) {
+                return GraphError.NodeNotExists;
+            }
+            var counter : usize = 0;
+            for (0..self.root.items.len) |i| {
+                for (self.root.items[i].adjs.items) |v| {
+                    if (node == v) {
+                        counter += 1;
+                    }
+                }
+            }
+            return counter;
+        }
+
         /// Returns the list of edges defined in the graph.
         pub fn getEdges(self: *Self, allocator: std.mem.Allocator) ![]Self.Edge {
             var edges = std.ArrayList(Self.Edge).init(self.allocator);
@@ -250,6 +288,9 @@ test "GraphBasicMetrics" {
     defer g.deinit();
     try std.testing.expect(g.numberOfNodes() == 0);
     try g.addEdge(5, 3);
+    const edges = try g.getEdges(std.testing.allocator);
+    defer std.testing.allocator.free(edges);
+    try std.testing.expect(g.hasEdge(edges[0].node_a, edges[0].node_b));
     try std.testing.expect(g.numberOfNodes() == 2);
     try std.testing.expect(g.numberOfEdges() == 1);
 }
@@ -262,13 +303,39 @@ test "GraphPredSuc" {
     try g.addEdge(1, 3);
     try g.addEdge(2, 4);
     try g.addEdge(4, 1);
+    // inDegree and outDegree
+    try std.testing.expect(try g.inDegree(3) == 2);
+    try std.testing.expect(try g.outDegree(2) == 2);
+    // Predecessors and successors
     const pred = try g.getPredecessors(std.testing.allocator, 4);
     defer std.testing.allocator.free(pred);
     try std.testing.expect(std.mem.eql(u8, &[_]u8{2}, pred));
     const succ = try g.getSuccesors(std.testing.allocator, 1);
     defer std.testing.allocator.free(succ);
     try std.testing.expect(std.mem.eql(u8, &[_]u8{2, 3}, succ));
-    const edges = try g.getEdges(std.testing.allocator);
-    defer std.testing.allocator.free(edges);
-    try std.testing.expect(g.hasEdge(edges[0].node_a, edges[0].node_b));
+}
+
+test "GraphWithEnums" {
+    const allocator = std.testing.allocator;
+    const City = enum {
+        NEW_YORK,
+        LOS_ANGELES,
+        CHICAGO,
+        HOUSTON,
+    };
+    var g = try Graph(City).init(allocator, GraphType.Undirected);
+    defer g.deinit();
+    try g.addWeightedEdge(.NEW_YORK, .LOS_ANGELES, 2448.15);
+    try g.addWeightedEdge(.NEW_YORK, .CHICAGO, 714.82);
+    try g.addWeightedEdge(.LOS_ANGELES, .HOUSTON, 1370.93); 
+    const edges = try g.getEdges(allocator);
+    defer allocator.free(edges);
+    for (edges) |edge| {
+        const distance = try g.getWeight(edge.node_a, edge.node_b); 
+        std.debug.print("{s} - {s}: {} miles\n", .{
+            @tagName(edge.node_a),
+            @tagName(edge.node_b),
+            distance.?,
+        });
+    }
 }
