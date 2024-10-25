@@ -11,7 +11,7 @@ Example:
 
 ```zig
 const std = @import("std");
-const graph = @import("ziggraph.zig");
+const graph = @import("ziggraph");
 const Graph = graph.Graph;
 const GraphType = graph.GraphType;
 
@@ -34,11 +34,11 @@ pub fn main() !void {
     try g.addWeightedEdge(.NEW_YORK, .CHICAGO, 714.82);
     try g.addWeightedEdge(.LOS_ANGELES, .HOUSTON, 1370.93); 
 
-    const edges = try g.getEdges(allocator);
+    const edges = try g.edges(allocator);
     defer allocator.free(edges);
 
     for (edges) |edge| {
-        const distance = try g.getWeight(edge.node_a, edge.node_b); 
+        const distance = try g.weight(edge.node_a, edge.node_b); 
         std.debug.print("{s} - {s}: {} miles\n", .{
             @tagName(edge.node_a),
             @tagName(edge.node_b),
