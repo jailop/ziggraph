@@ -52,7 +52,9 @@ pub fn Graph(comptime T: type) type {
         allocator: std.mem.Allocator,
         gType: GraphType,
 
-        pub fn init(allocator: std.mem.Allocator, comptime gType: GraphType) !Self {
+        // Initializes a Graph container. The callee should provide the
+        // dynamic memory allocator and indicate the type of graph.
+        pub fn init(allocator: std.mem.Allocator, gType: GraphType) Self {
             return Self{
                 .nodes = std.ArrayList(T).init(allocator),
                 .root = std.ArrayList(Node).init(allocator),
@@ -61,6 +63,7 @@ pub fn Graph(comptime T: type) type {
             };
         }
 
+        // Deallocates memory objects used by the graph.
         pub fn deinit(self: *const Self) void {
             for (self.root.items) |vertex| {
                 vertex.adjs.deinit();
@@ -70,15 +73,17 @@ pub fn Graph(comptime T: type) type {
             self.root.deinit();
         }
 
-        inline fn getNodeIndex(self: *const Self, vertex: T) ?usize {
-            return std.mem.indexOfScalar(T, self.nodes.items, vertex);
+        inline fn getNodeIndex(self: *const Self, node: T) ?usize {
+            return std.mem.indexOfScalar(T, self.nodes.items, node);
         }
 
-        pub fn hasNode(self: *const Self, vertex: T) bool {
-            const value = self.getNodeIndex(vertex);
+        // Indicates if a node exists.
+        pub fn hasNode(self: *const Self, node: T) bool {
+            const value = self.getNodeIndex(node);
             return if (value) |_| true else false;
         }
 
+        // Indicates if an edge exists
         pub fn hasEdge(self: *Self, node_a: T, node_b: T) bool {
             const node = self.getNode(node_a);
             if (node) |n| {
@@ -91,6 +96,8 @@ pub fn Graph(comptime T: type) type {
             return false;
         }
 
+        // Add a new node to the graph. If the node already exists, an error is
+        // returned.
         pub fn addNode(self: *Self, vertex: T) !void {
             if (self.hasNode(vertex)) {
                 return GraphError.NodeAlreadyExists;
@@ -100,12 +107,6 @@ pub fn Graph(comptime T: type) type {
                 .adjs = std.ArrayList(T).init(self.allocator),
                 .weights = std.ArrayList(?f64).init(self.allocator),
             });
-        }
-
-        pub fn addNodesFrom(self: *Self, vertices: []T) !void {
-            for (vertices) |vertex| {
-                try self.addNode(vertex);
-            }
         }
 
         fn getNode(self: *Self, vertex: T) ?*Node {
@@ -171,6 +172,10 @@ pub fn Graph(comptime T: type) type {
             return GraphError.EdgeNotExists;
         }
 
+        /// Returns the list of notes that are predecessor of the required one.
+        /// If the required vertex doesn't exist, an error is returned.
+        /// If the required vertex doesn't have any predecessor, a empty list
+        /// is returned.
         pub fn getSuccesors(self: *Self, allocator: std.mem.Allocator, vertex: T) ![]T {
             const node = self.getNode(vertex);
             if (node) |n| {
@@ -193,7 +198,7 @@ pub fn Graph(comptime T: type) type {
             return GraphError.NodeNotExists;
         }
 
-        /// Returns a list of vertex that are predecessor of the required one.
+        /// Returns the list of notes that are predecessor of the required one.
         /// If the required vertex doesn't exist, an error is returned.
         /// If the required vertex doesn't have any predecessor, a empty list
         /// is returned.
@@ -254,7 +259,7 @@ pub fn Graph(comptime T: type) type {
 }
 
 test "GraphAddingNodes" {
-    var g = try Graph(u32).init(std.testing.allocator, GraphType.Directed);
+    var g = Graph(u32).init(std.testing.allocator, GraphType.Directed);
     defer g.deinit();
     try g.addNode(0);
     try std.testing.expect(g.hasNode(0));
@@ -267,7 +272,7 @@ test "GraphAddingNodes" {
 }
 
 test "GraphAddingEdges" {
-    var g = try Graph(u16).init(std.testing.allocator, GraphType.Undirected);
+    var g = Graph(u16).init(std.testing.allocator, GraphType.Undirected);
     defer g.deinit();
     try g.addWeightedEdge(5, 3, 1.0);
     try std.testing.expect(g.hasNode(5));
@@ -284,7 +289,7 @@ test "GraphAddingEdges" {
 }
 
 test "GraphBasicMetrics" {
-    var g = try Graph(u8).init(std.testing.allocator, GraphType.Undirected);
+    var g = Graph(u8).init(std.testing.allocator, GraphType.Undirected);
     defer g.deinit();
     try std.testing.expect(g.numberOfNodes() == 0);
     try g.addEdge(5, 3);
@@ -296,7 +301,7 @@ test "GraphBasicMetrics" {
 }
 
 test "GraphPredSuc" {
-    var g = try Graph(u8).init(std.testing.allocator, GraphType.Directed);
+    var g = Graph(u8).init(std.testing.allocator, GraphType.Directed);
     defer g.deinit();
     try g.addEdge(1, 2);
     try g.addEdge(2, 3);
@@ -323,7 +328,7 @@ test "GraphWithEnums" {
         CHICAGO,
         HOUSTON,
     };
-    var g = try Graph(City).init(allocator, GraphType.Undirected);
+    var g = Graph(City).init(allocator, GraphType.Undirected);
     defer g.deinit();
     try g.addWeightedEdge(.NEW_YORK, .LOS_ANGELES, 2448.15);
     try g.addWeightedEdge(.NEW_YORK, .CHICAGO, 714.82);

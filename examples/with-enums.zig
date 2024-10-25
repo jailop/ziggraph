@@ -15,7 +15,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var g = try Graph(City).init(allocator, GraphType.Undirected);
+    var g = Graph(City).init(allocator, GraphType.Undirected);
     defer g.deinit();
 
     try g.addWeightedEdge(.NEW_YORK, .LOS_ANGELES, 2448.15);

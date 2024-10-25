@@ -1,5 +1,7 @@
 # ziggraph - A graph representation module written in Zig
 
+Discord: https://discord.gg/bkrDpzdu
+
 This module is intended to provide a representation for graphs with basic
 operations.
 
