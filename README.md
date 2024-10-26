@@ -25,7 +25,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var g = try Graph(City).init(allocator, GraphType.Undirected);
+    var g = Graph(City).init(allocator, GraphType.Undirected);
     defer g.deinit();
 
     try g.addWeightedEdge(.NEW_YORK, .LOS_ANGELES, 2448.15);
@@ -36,11 +36,10 @@ pub fn main() !void {
     defer allocator.free(edges);
 
     for (edges) |edge| {
-        const distance = try g.weight(edge.node_a, edge.node_b); 
         std.debug.print("{s} - {s}: {} miles\n", .{
             @tagName(edge.node_a),
             @tagName(edge.node_b),
-            distance.?,
+            edge.weight,
         });
     }
 }

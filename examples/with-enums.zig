@@ -26,11 +26,10 @@ pub fn main() !void {
     defer allocator.free(edges);
 
     for (edges) |edge| {
-        const distance = try g.weight(edge.node_a, edge.node_b); 
         std.debug.print("{s} - {s}: {} miles\n", .{
             @tagName(edge.node_a),
             @tagName(edge.node_b),
-            distance.?,
+            edge.weight,
         });
     }
 }
