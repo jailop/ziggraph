@@ -2,3 +2,10 @@
 
 - Basic functions are completed
 - Minimal documentation completed
+
+0.1.1 - 2024-10-26:
+
+- Edge struct includes weight
+- For weight undefined values, using std.math.nan(f64) instead of an optional
+  ?f64.
+- Package instructions, to import in in third-party projects
