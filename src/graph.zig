@@ -2,10 +2,8 @@
 
 const std = @import("std");
 
-/// A graph can be directed
-/// or undirected. When you create a new
-/// graph, it is required to specify its
-/// type.
+/// A graph can be directed or undirected. When you create a new graph, it is
+/// required to specify its type.
 pub const GraphType = enum {
     /// Edges have direction. Every edge goes from one
     /// note to another, but not backwards.
@@ -29,24 +27,39 @@ pub const GraphError = error{
     /// For example, inDegree and outDegree only work with directed
     /// graphs.
     IncorrectGraphType,
+    /// In undirected graphs, an edge can not be refered to the same node in
+    /// both side.
+    InvalidEdge
 };
 
-/// Represents a set of node and a set of edges connecting nodes. Data type to
-/// be used to represent nodes shoudl be specified when the graph is
-/// initialized. You can use any scalar type working with logical opertors.
+/// Represents a set of nodes and a set of edges connecting those nodes. For
+/// this implementation, data type to be used to represent nodes should be
+/// specified when the graph is initialized. You can use any scalar type.
+/// 
+/// Example: 
+///
+/// ```zig
+/// const allocator = std.heap.page_allocator;
+/// var g = Graph(u8).init(allocator, GraphType.Directed);
+/// defer g.deinit();
+/// ```
 pub fn Graph(comptime T: type) type {
     return struct {
         const Node = struct {
             adjs: std.ArrayList(T),
-            weights: std.ArrayList(?f64),
+            weights: std.ArrayList(f64),
         };
-
+        
+        /// A struct to represent edges. It is used to return information about
+        /// edges defined in a grap.
         pub const Edge = struct {
             node_a: T,
             node_b: T,
+            weight: f64,
         };
 
         const Self = @This();
+        // A graph is implemented as adjacent lists.
         nodes: std.ArrayList(T),
         root: std.ArrayList(Node),
         allocator: std.mem.Allocator,
@@ -78,6 +91,19 @@ pub fn Graph(comptime T: type) type {
         }
 
         /// Indicates if a node exists.
+        ///
+        /// Example:
+        ///
+        /// ```zig
+        /// // A Graph g has been previously created and a few
+        /// // nodes have been added
+        ///
+        /// if (g.hasNode(2)) {
+        ///     std.debug.print("{s}\n", .{"Node exists"});
+        /// } else {
+        ///     std.debug.print("{s}\n", .{"Node not found"});
+        /// }
+        /// ```
         pub fn hasNode(self: *const Self, node: T) bool {
             const value = self._getNodeIndex(node);
             return if (value) |_| true else false;
@@ -105,7 +131,7 @@ pub fn Graph(comptime T: type) type {
             try self.nodes.append(vertex);
             try self.root.append(Node{
                 .adjs = std.ArrayList(T).init(self.allocator),
-                .weights = std.ArrayList(?f64).init(self.allocator),
+                .weights = std.ArrayList(f64).init(self.allocator),
             });
         }
 
@@ -118,7 +144,10 @@ pub fn Graph(comptime T: type) type {
             return null;
         }
 
-        fn _addEdge(self: *Self, node_a: T, node_b: T, w: ?f64) !void {
+        fn _addEdge(self: *Self, node_a: T, node_b: T, w: f64) !void {
+            if (node_a == node_b and self.gType == GraphType.Undirected) {
+                return GraphError.InvalidEdge;
+            } 
             if (!self.hasNode(node_b)) {
                 try self.addNode(node_b);
             }
@@ -140,7 +169,7 @@ pub fn Graph(comptime T: type) type {
         /// Adds a new weighted edge to the node. If the edge already exists, a
         /// `EdgeAlreadyExists` error is returned. If any of the refered nodes
         /// do not exists, then it is created.
-        pub fn addWeightedEdge(self: *Self, node_a: T, node_b: T, w: ?f64) !void {
+        pub fn addWeightedEdge(self: *Self, node_a: T, node_b: T, w: f64) !void {
             try self._addEdge(node_a, node_b, w);
             if (self.gType == GraphType.Undirected) {
                 try self._addEdge(node_b, node_a, w);
@@ -151,7 +180,7 @@ pub fn Graph(comptime T: type) type {
         /// `EdgeAlreadyExists` error is returned. If any of the refered nodes
         /// do not exists, then it is created.
         pub fn addEdge(self: *Self, node_a: T, node_b: T) !void {
-            try self.addWeightedEdge(node_a, node_b, undefined);
+            try self.addWeightedEdge(node_a, node_b, std.math.nan(f64));
         }
 
         /// Returns the number of nodes defined in a graph.
@@ -170,7 +199,7 @@ pub fn Graph(comptime T: type) type {
 
         /// Returns the weight assigned to an edge. If the edge does not exists,
         /// a `EdgeNotExists` error is returned.
-        pub fn weight(self: *Self, node_a: T, node_b: T) !?f64 {
+        pub fn weight(self: *Self, node_a: T, node_b: T) !f64 {
             const node = self._getNode(node_a);
             if (node) |n| {
                 for (0..n.adjs.items.len) |i| {
@@ -297,10 +326,11 @@ pub fn Graph(comptime T: type) type {
             var edgesRef = std.ArrayList(Self.Edge).init(self.allocator);
             defer edgesRef.deinit();
             for (0..self.root.items.len) |i| {
-                for (self.root.items[i].adjs.items) |vertex| {
+                for (0..self.root.items[i].adjs.items.len) |j| {
                     try edgesRef.append(Self.Edge{
                         .node_a = self.nodes.items[i],
-                        .node_b = vertex,
+                        .node_b = self.root.items[i].adjs.items[j],
+                        .weight = self.root.items[i].weights.items[j],
                     });
                 }
             }
@@ -332,10 +362,8 @@ test "GraphAddingEdges" {
     try std.testing.expect(g.hasEdge(3, 5));
     try std.testing.expect(!g.hasEdge(8, 5));
     const weight = try g.weight(5, 3);
-    if (weight) |w| {
-        try std.testing.expect(w == 1.0);
-        try std.testing.expect(w != 5.0);
-    }
+    try std.testing.expect(weight == 1.0);
+    try std.testing.expect(weight != 5.0);
     try std.testing.expect(g.numberOfNodes() == 2);
     try std.testing.expect(g.numberOfEdges() == 1);
     try std.testing.expect(try g.degree(5) == 1);
@@ -390,11 +418,10 @@ test "GraphWithEnums" {
     const edges = try g.edges(allocator);
     defer allocator.free(edges);
     for (edges) |edge| {
-        const distance = try g.weight(edge.node_a, edge.node_b); 
         std.debug.print("{s} - {s}: {} miles\n", .{
             @tagName(edge.node_a),
             @tagName(edge.node_b),
-            distance.?,
+            edge.weight,
         });
     }
 }

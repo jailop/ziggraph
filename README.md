@@ -1,9 +1,7 @@
 # ziggraph - A graph representation module written in Zig
 
-Discord: https://discord.gg/bkrDpzdu
-
-This module is intended to provide a representation for graphs with basic
-operations.
+This module is intended to provide a representation for graph basic
+operations. It does not implement graph algorithms.
 
 Documentation: <https://jailop.github.io/ziggraph/>
 
@@ -57,4 +55,41 @@ NEW_YORK - LOS_ANGELES: 2.44815e3 miles
 NEW_YORK - CHICAGO: 7.1482e2 miles
 CHICAGO - NEW_YORK: 7.1482e2 miles
 HOUSTON - LOS_ANGELES: 1.37093e3 miles
+```
+
+To include this module in your project, declare it as a dependency in the
+`build.zig.zon` file:
+
+```zig
+    ...
+    .dependencies = .{                                                          
+        ...
+        .ziggraph = .{                                                           
+            .url = "https://github.com/jailop/ziggraph/archive/refs/tags/ziggraph-0.1.1.tar.gz",                                                                
+            .hash = "1220dc58d1d7b3ffe0d7a89d12169b4ca66860e4e6fd473df1a8190bb81ea73bb8e0",                                                                     
+        },
+        ...
+    },
+    ...
+```
+
+After that, import the module for your executable artifact in `build.zig`. For
+example:
+
+```zig
+   const exe = b.addExecutable(.{                                              
+        .name = "MyExecutable",                                                           
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,                                                       
+        .optimize = optimize,                                                   
+    });                                                                         
+                                                                                
+    const ziggraph = b.dependency("ziggraph", .{                                
+        .target = target,                                                       
+        .optimize = optimize,                                                   
+    });                                                                         
+                                                                                
+    exe.root_module.addImport("ziggraph", ziggraph.module("ziggraph"));    
+    
+    b.installArtifact(exe);
 ```
