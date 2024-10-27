@@ -9,3 +9,8 @@
 - For weight undefined values, using std.math.nan(f64) instead of an optional
   ?f64.
 - Package instructions, to import in in third-party projects
+
+0.1.2
+
+- nodes field changed to vertices. It was conflicting with function nodes.
+- Dijkstra example included

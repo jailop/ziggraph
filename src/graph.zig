@@ -60,7 +60,7 @@ pub fn Graph(comptime T: type) type {
 
         const Self = @This();
         // A graph is implemented as adjacent lists.
-        nodes: std.ArrayList(T),
+        vertices: std.ArrayList(T),
         root: std.ArrayList(Node),
         allocator: std.mem.Allocator,
         gType: GraphType,
@@ -69,7 +69,7 @@ pub fn Graph(comptime T: type) type {
         /// dynamic memory allocator and indicate the type of graph.
         pub fn init(allocator: std.mem.Allocator, gType: GraphType) Self {
             return Self{
-                .nodes = std.ArrayList(T).init(allocator),
+                .vertices = std.ArrayList(T).init(allocator),
                 .root = std.ArrayList(Node).init(allocator),
                 .gType = gType,
                 .allocator = allocator,
@@ -82,12 +82,12 @@ pub fn Graph(comptime T: type) type {
                 vertex.adjs.deinit();
                 vertex.weights.deinit();
             }
-            self.nodes.deinit();
+            self.vertices.deinit();
             self.root.deinit();
         }
 
         inline fn _getNodeIndex(self: *const Self, node: T) ?usize {
-            return std.mem.indexOfScalar(T, self.nodes.items, node);
+            return std.mem.indexOfScalar(T, self.vertices.items, node);
         }
 
         /// Indicates if a node exists.
@@ -128,7 +128,7 @@ pub fn Graph(comptime T: type) type {
             if (self.hasNode(vertex)) {
                 return GraphError.NodeAlreadyExists;
             }
-            try self.nodes.append(vertex);
+            try self.vertices.append(vertex);
             try self.root.append(Node{
                 .adjs = std.ArrayList(T).init(self.allocator),
                 .weights = std.ArrayList(f64).init(self.allocator),
@@ -136,8 +136,8 @@ pub fn Graph(comptime T: type) type {
         }
 
         fn _getNode(self: *Self, vertex: T) ?*Node {
-            for (0..self.nodes.items.len) |i| {
-                if (self.nodes.items[i] == vertex) {
+            for (0..self.vertices.items.len) |i| {
+                if (self.vertices.items[i] == vertex) {
                     return &self.root.items[i];
                 }
             }
@@ -260,7 +260,7 @@ pub fn Graph(comptime T: type) type {
             for (0..self.root.items.len) |i| {
                 for (self.root.items[i].adjs.items) |v| {
                     if (vertex == v) {
-                        try pred.append(self.nodes.items[i]);
+                        try pred.append(self.vertices.items[i]);
                     }
                 }
             }
@@ -315,8 +315,8 @@ pub fn Graph(comptime T: type) type {
         /// Returns the list of nodes defined in the graph. The returned value
         /// should be deallocated from memory.
         pub fn nodes(self: *Self, allocator: std.mem.Allocator) ![]T {
-            const res = allocator.alloc(T, self.nodes.items.len);
-            std.mem.copyForwards(T, res, self.nodes.items);
+            const res = allocator.alloc(T, self.vertices.items.len);
+            std.mem.copyForwards(T, res, self.vertices.items);
             return res;
         }
 
@@ -328,7 +328,7 @@ pub fn Graph(comptime T: type) type {
             for (0..self.root.items.len) |i| {
                 for (0..self.root.items[i].adjs.items.len) |j| {
                     try edgesRef.append(Self.Edge{
-                        .node_a = self.nodes.items[i],
+                        .node_a = self.vertices.items[i],
                         .node_b = self.root.items[i].adjs.items[j],
                         .weight = self.root.items[i].weights.items[j],
                     });

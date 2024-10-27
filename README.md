@@ -21,9 +21,9 @@ const City = enum {
 };
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var heapAlloc = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer heapAlloc.deinit();
+    const allocator = heapAlloc.allocator();
 
     var g = Graph(City).init(allocator, GraphType.Undirected);
     defer g.deinit();
