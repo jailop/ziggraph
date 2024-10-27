@@ -6,7 +6,7 @@ const std = @import("std");
 /// required to specify its type.
 pub const GraphType = enum {
     /// Edges have direction. Every edge goes from one
-    /// note to another, but not backwards.
+    /// node to another, but not backwards.
     Directed,
     /// Edges have not direction.
     Undirected,
@@ -183,6 +183,18 @@ pub fn Graph(comptime T: type) type {
             try self.addWeightedEdge(node_a, node_b, std.math.nan(f64));
         }
 
+        pub fn addEdges(self: *Self, comptime edgeList: anytype) !void {
+            for (edgeList) |edge| {
+                if (edge.len == 2) {
+                    self.addEdge(edge[0], edge[1]) catch {};
+                } else if (edge.len == 3) {
+                    self.addWeightedEdge(edge[0], edge[1], edge[2]) catch {};
+                } else {
+                    return GraphType.InvalidEdge;
+                }
+            }
+        }
+
         /// Returns the number of nodes defined in a graph.
         pub fn numberOfNodes(self: *const Self) u64 {
             return self.root.items.len;
@@ -211,7 +223,7 @@ pub fn Graph(comptime T: type) type {
             return GraphError.EdgeNotExists;
         }
 
-        fn _neighboors(self: *Self, allocator: std.mem.Allocator, node: T) ![]T {
+        fn _neighbors(self: *Self, allocator: std.mem.Allocator, node: T) ![]T {
             const nodeRef = self._getNode(node);
             if (nodeRef) |nr| {
                 const res = try allocator.alloc(T, nr.adjs.items.len);
@@ -221,19 +233,19 @@ pub fn Graph(comptime T: type) type {
             return GraphError.NodeNotExists;
         }
 
-        /// Returns the list of nodes that are neighboors of the required one.
+        /// Returns the list of nodes that are neighbors of the required one.
         /// This function is applicable for undirected graphs, otherwise an
         /// error is returned. If the node does not exists, a `NodeNotExists`
         /// error is returned. For directed graph, use `predecessors` and
         /// `successors`.
-        pub fn neighboors(self: *Self, allocator: std.mem.Allocator, node: T) ![]T {
+        pub fn neighbors(self: *Self, allocator: std.mem.Allocator, node: T) ![]T {
             if (self.gType != GraphType.Undirected) {
                 return GraphError.IncorrectGraphType;
             }
-            return self._neighboors(allocator, node);
+            return self._neighbors(allocator, node);
         }
 
-        /// Returns the list of notes that are predecessors of the required one.
+        /// Returns the list of nodes that are predecessors of the required one.
         /// If the required vertex doesn't exist, a `NodeNotExists` error is
         /// returned.  If the required vertex doesn't have any predecessor, a
         /// empty list is returned.
@@ -241,10 +253,10 @@ pub fn Graph(comptime T: type) type {
             if (self.gType != GraphType.Directed) {
                 return GraphError.IncorrectGraphType;
             }
-            return self._neighboors(allocator, node);
+            return self._neighbors(allocator, node);
         }
 
-        /// Returns the list of notes that are predecessors of the required one.
+        /// Returns the list of nodes that are predecessors of the required one.
         /// If the required vertex doesn't exist, an error is returned.
         /// If the required vertex doesn't have any predecessor, a empty list
         /// is returned.
@@ -424,4 +436,20 @@ test "GraphWithEnums" {
             edge.weight,
         });
     }
+}
+
+test "AddEdges" {
+    const allocator = std.testing.allocator;
+    var g = Graph(u8).init(allocator, GraphType.Directed);
+    defer g.deinit();
+    try g.addEdges([_]struct{u8, u8, f64}{
+        .{1, 2, 14.0},
+        .{1, 3, 12.0},
+    });
+    try g.addEdges([_]struct{u8, u8}{
+        .{2, 4},
+        .{3, 4},
+    });
+    try std.testing.expect(g.numberOfNodes() == 4);
+    try std.testing.expect(g.numberOfEdges() == 4);
 }

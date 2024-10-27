@@ -7,7 +7,7 @@ const ziggraph = @import("ziggraph");
 const Graph = ziggraph.Graph;
 const GraphType = ziggraph.GraphType;
 
-/// Founds the minimum distance among the non visited nodes. Returns the
+/// Finds the minimum distance among the non visited nodes. Returns the
 /// position of the node with the minimum distance from the source.
 fn posMinDistance(visited: []const bool, distance: []const f64) ?usize {
     var minDistance = std.math.inf(f64);
@@ -54,7 +54,7 @@ pub fn main() !void {
     var last = [_]?u8{null} ** 6;
   
     // Initial values
-    // The problem is find the shortest path distance
+    // The problem is to find the shortest path distance
     // taking as source the node 1
     const source: u8 = 1;
     const posSource = std.mem.indexOfScalar(u8, &nodes, source).?;
@@ -67,17 +67,17 @@ pub fn main() !void {
         visited[posMin] = true;
         // Identified the current node
         const current = nodes[posMin];
-        // Obtaning the list of neighboors
-        const neighboors = try g.neighboors(allocator, current);
-        defer allocator.free(neighboors);
-        for (neighboors) |neighboor| {
-            // For each neighboor, obtaning its position in arrays
-            const posNgh = std.mem.indexOfScalar(u8, &nodes, neighboor).?; 
+        // Obtaning the list of neighbors
+        const neighbors = try g.neighbors(allocator, current);
+        defer allocator.free(neighbors);
+        for (neighbors) |neighbor| {
+            // For each neighbor, obtaning its position in arrays
+            const posNgh = std.mem.indexOfScalar(u8, &nodes, neighbor).?; 
             if (visited[posNgh]) {
                 continue;
             }
             // Distance from the source
-            const alt = distance[posMin] + try g.weight(current, neighboor);
+            const alt = distance[posMin] + try g.weight(current, neighbor);
             // Updating distances and adjacent node
             if (alt < distance[posNgh]) {
                 distance[posNgh] = alt;

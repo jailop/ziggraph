@@ -1,11 +1,21 @@
 # ziggraph - A graph representation module written in Zig
 
 This module is intended to provide a representation for graph basic
-operations. It does not implement graph algorithms.
+operations. It does not implement graph algorithms (check the folder examples
+to check some algorithm implementations using this module).
+
+## Features
+
+* Graphs for any scalar type
+* Add nodes and edges
+* Edges can have weights
+* Count nodes and edges
+* Retrieve neighbors (undirected) or predecessors and successors (directed)
+* Get the degree of a node (in and out for directed graphs) 
 
 Documentation: <https://jailop.github.io/ziggraph/>
 
-Example:
+## Example
 
 ```zig
 const std = @import("std");
@@ -55,6 +65,8 @@ NEW_YORK - CHICAGO: 7.1482e2 miles
 CHICAGO - NEW_YORK: 7.1482e2 miles
 HOUSTON - LOS_ANGELES: 1.37093e3 miles
 ```
+
+## Installation
 
 To include this module in your project, declare it as a dependency in the
 `build.zig.zon` file:

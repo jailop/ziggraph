@@ -14,3 +14,4 @@
 
 - nodes field changed to vertices. It was conflicting with function nodes.
 - Dijkstra example included
+- It is possible to add multiple edges in one call
