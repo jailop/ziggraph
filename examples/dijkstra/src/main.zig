@@ -32,20 +32,20 @@ pub fn main() !void {
     defer g.deinit();
     
     // Nodes initialization
-    try g.addWeightedEdge(1, 2, 7.0);
-    try g.addWeightedEdge(1, 3, 9.0);
-    try g.addWeightedEdge(1, 6, 14.0);
-    try g.addWeightedEdge(2, 3, 10.0);
-    try g.addWeightedEdge(2, 4, 15.0);
-    try g.addWeightedEdge(3, 4, 11.0);
-    try g.addWeightedEdge(3, 6, 2.0);
-    try g.addWeightedEdge(4, 5, 6.0);
-    try g.addWeightedEdge(5, 6, 9.0);
-
+    g.addEdges([_]struct{u8, u8, f64}{
+        .{1, 2, 7.0},
+        .{1, 3, 9.0},
+        .{1, 6, 14.0},
+        .{2, 3, 10.0},
+        .{2, 4, 15.0},
+        .{3, 4, 11.0},
+        .{3, 6, 2.0},
+        .{4, 5, 6.0},
+        .{5, 6, 9.0},
+    });
 
     // List of nodes
-    // TODO: use g.nodes(allocator)
-    const nodes = [_]u8{1, 2, 3, 4, 5, 6};
+    const nodes = g.nodes(allocator);
     // Array representing visited nodes
     var visited = [_]bool{false} ** 6;
     // Array to store shortest distances

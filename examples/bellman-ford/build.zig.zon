@@ -24,7 +24,8 @@
     // internet connectivity.
     .dependencies = .{
         .ziggraph = . {
-            .path = "../ziggraph"
+            .url = "https://github.com/jailop/ziggraph/archive/refs/tags/ziggraph-0.1.2.tar.gz",
+            .hash = "122066ba668bfedb79f726a7ff853d4b0e87fa7ddfd5bec2716cc2e820ed4d318b60",
         }
         // See `zig fetch --save <url>` for a command-line interface for adding dependencies.
         //.example = .{

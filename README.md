@@ -77,7 +77,7 @@ To include this module in your project, declare it as a dependency in the
         ...
         .ziggraph = .{                                                           
             .url = "https://github.com/jailop/ziggraph/archive/refs/tags/ziggraph-0.1.1.tar.gz",                                                                
-            .hash = "122047dc37aacfe81d401438830104c1e0c4aa47da33eb830456063d9da27d82d876",                                                                     
+            .hash = "122066ba668bfedb79f726a7ff853d4b0e87fa7ddfd5bec2716cc2e820ed4d318b60",                                                                     
         },
         ...
     },
