@@ -2,7 +2,7 @@
 
 This module is intended to provide a representation for graph basic
 operations. It does not implement graph algorithms (check the folder examples
-to check some algorithm implementations using this module).
+to some algorithm implementations using this module).
 
 ## Features
 
